@@ -4,4 +4,12 @@
 
 <h1>Welcome to Quill Blazor demo</h1>
 
-<HtmlEditor ShowToolbar="true"></HtmlEditor>
+<HtmlEditor ShowToolbar="true" @bind-Value="HtmlContent"></HtmlEditor>
+
+<div>
+    @((MarkupString)HtmlContent)
+</div>
+
+@code {
+    private string HtmlContent = "<p>Hello world</p>";
+}

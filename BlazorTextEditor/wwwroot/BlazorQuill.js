@@ -1,6 +1,6 @@
 ﻿(function () {
     window.QuillFunctions = {
-        createQuill: function (quillElement, toolbar) {
+        createQuill: function (quillElement, toolbar, dotNetHelper, initialContent) {
             Quill.register({
                 'modules/table-better': QuillTableBetter
             }, true);
@@ -27,7 +27,20 @@
                 }
             }
             
-            quillElement.__quill = new Quill(quillElement, options);
-        }
+            const quill = new Quill(quillElement, options);
+            quillElement.__quill = quill;
+
+            if (initialContent) {
+                quill.root.innerHTML = initialContent;
+            }
+
+            quill.on('text-change', function () {
+                const html = quill.root.innerHTML;
+                dotNetHelper.invokeMethodAsync('OnQuillTextChanged', html);
+            });
+        },
+        getQuillHTML: function (quillElement) {
+            return quillElement.__quill.root.innerHTML;
+        },
     }
 })();

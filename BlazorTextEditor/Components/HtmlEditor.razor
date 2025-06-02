@@ -1,17 +1,48 @@
-﻿@inject QuillInterop Quill
+﻿@inject IJSRuntime JSRuntime
 
 <div id="QuillEditor" @ref="@QuillElement">
 </div>
 
 @code {
     private ElementReference QuillElement;
+    private DotNetObjectReference<HtmlEditor>? DotNetRef;
 
     [Parameter]
     public bool ShowToolbar { get; set; } = true;
 
+    [Parameter]
+    public string? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    [JSInvokable]
+    public async Task OnQuillTextChanged(string html)
+    {
+        if (Value != html)
+        {
+            Value = html;
+            await ValueChanged.InvokeAsync(html);
+        }
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
-            await Quill.CreateQuill(QuillElement, ShowToolbar);
+        {
+            DotNetRef = DotNetObjectReference.Create(this);
+
+            await JSRuntime.InvokeAsync<object>(
+                "QuillFunctions.createQuill",
+                QuillElement,
+                ShowToolbar,
+                DotNetRef,
+                Value);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        DotNetRef?.Dispose();
     }
 }
