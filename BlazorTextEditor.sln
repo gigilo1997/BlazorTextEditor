@@ -5,6 +5,8 @@ VisualStudioVersion = 17.14.36109.1 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorTextEditor", "BlazorTextEditor\BlazorTextEditor.csproj", "{7C2E3FFA-D354-4175-AAA4-6AB63F4548F9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorTextEditor.Server", "BlazorTextEditor.Server\BlazorTextEditor.Server.csproj", "{FB98C815-ADF0-4C8F-9187-21286EBB782C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{7C2E3FFA-D354-4175-AAA4-6AB63F4548F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7C2E3FFA-D354-4175-AAA4-6AB63F4548F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7C2E3FFA-D354-4175-AAA4-6AB63F4548F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB98C815-ADF0-4C8F-9187-21286EBB782C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB98C815-ADF0-4C8F-9187-21286EBB782C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB98C815-ADF0-4C8F-9187-21286EBB782C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB98C815-ADF0-4C8F-9187-21286EBB782C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
