@@ -1,0 +1,17 @@
+﻿@inject QuillInterop Quill
+
+<div id="QuillEditor" @ref="@QuillElement">
+</div>
+
+@code {
+    private ElementReference QuillElement;
+
+    [Parameter]
+    public bool ShowToolbar { get; set; } = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await Quill.CreateQuill(QuillElement, ShowToolbar);
+    }
+}
