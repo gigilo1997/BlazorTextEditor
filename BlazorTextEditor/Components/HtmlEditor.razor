@@ -1,11 +1,30 @@
 ﻿@inject IJSRuntime JSRuntime
 
-<div @ref="@QuillElement">
+<div class="editor-container" @onclick="OnEditorClick">
+    <div class="editor">
+        <div @ref="QuillElement"></div>
+    </div>
+
+    @if (IsPopupVisible)
+    {
+        <div class="select-list">
+            @foreach (var item in PredefinedValues)
+            {
+                <div class="list-item" @onclick="() => InsertValue(item)">@item</div>
+            }
+        </div>
+    }
 </div>
 
 @code {
     private ElementReference QuillElement;
     private DotNetObjectReference<HtmlEditor>? DotNetRef;
+    private bool IsPopupVisible = false;
+
+    private readonly List<string> PredefinedValues = new()
+    {
+        "Georgia", "United States", "Canada", "United Kingdom", "Germany", "France", "Japan"
+    };
 
     [Parameter]
     public bool ShowToolbar { get; set; } = true;
@@ -15,16 +34,6 @@
 
     [Parameter]
     public EventCallback<string> ValueChanged { get; set; }
-
-    [JSInvokable]
-    public async Task OnQuillTextChanged(string html)
-    {
-        if (Value != html)
-        {
-            Value = html;
-            await ValueChanged.InvokeAsync(html);
-        }
-    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -38,11 +47,52 @@
                 ShowToolbar,
                 DotNetRef,
                 Value);
+
+            await JSRuntime.InvokeVoidAsync("QuillFunctions.registerOutsideClickHandler",
+                QuillElement,
+                DotNetRef);
+        }
+    }
+
+    private async Task InsertValue(string value)
+    {
+        await JSRuntime.InvokeVoidAsync("QuillFunctions.insertTextAtCursor", QuillElement, value);
+
+        StateHasChanged();
+    }
+
+    private void OnEditorClick()
+    {
+        IsPopupVisible = true;
+    }
+
+    [JSInvokable]
+    public async Task OnQuillTextChanged(string html)
+    {
+        if (Value != html)
+        {
+            Value = html;
+            await ValueChanged.InvokeAsync(html);
+        }
+    }
+
+    [JSInvokable]
+    public void ClosePopup()
+    {
+        if (IsPopupVisible)
+        {
+            IsPopupVisible = false;
+            StateHasChanged();
         }
     }
 
     public async ValueTask DisposeAsync()
     {
+        if (QuillElement.Id is not null)
+        {
+            await JSRuntime.InvokeVoidAsync("QuillFunctions.unregisterOutsideClickHandler", QuillElement);
+        }
+
         DotNetRef?.Dispose();
     }
 }

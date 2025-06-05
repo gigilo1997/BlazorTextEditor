@@ -108,8 +108,44 @@
             });
         },
 
-        getQuillHTML: function (quillElement) {
-            return quillElement.__quill.root.innerHTML;
+        insertTextAtCursor: function (quillElement, text) {
+            const quill = quillElement.__quill;
+            if (!quill) return;
+
+            const range = quill.getSelection(true);
+            if (range) {
+                quill.insertText(range.index, text, {
+                    color: '#444444',
+                    bold: true
+                });
+                quill.setSelection(range.index + text.length);
+            } else {
+                quill.insertText(quill.getLength(), text, {
+                    color: '#444444',
+                    bold: true
+                });
+                quill.setSelection(quill.getLength());
+            }
+        },
+
+        registerOutsideClickHandler: function (quillElement, dotNetHelper) {
+            function onClick(event) {
+                const editorWrapper = quillElement.parentElement.parentElement;
+                if (!editorWrapper.contains(event.target)) {
+                    dotNetHelper.invokeMethodAsync('ClosePopup');
+                }
+            }
+
+            document.addEventListener('click', onClick);
+
+            quillElement._outsideClickHandler = onClick;
+        },
+
+        unregisterOutsideClickHandler: function (quillElement) {
+            if (quillElement._outsideClickHandler) {
+                document.removeEventListener('click', quillElement._outsideClickHandler);
+                quillElement._outsideClickHandler = null;
+            }
         }
     };
 })();

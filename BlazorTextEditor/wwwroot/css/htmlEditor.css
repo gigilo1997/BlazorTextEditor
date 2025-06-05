@@ -1,0 +1,34 @@
+﻿.editor-container {
+    display: flex;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    min-height: 200px;
+    overflow: hidden;
+}
+
+.editor {
+    flex: 1;
+    padding: 1rem;
+    border-right: 1px solid #ddd;
+}
+
+.select-list {
+    width: 200px;
+    background-color: #f9f9f9;
+    border-left: 1px solid #ddd;
+    height: 100%;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.list-item {
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.list-item:hover {
+    background-color: #eee;
+}
