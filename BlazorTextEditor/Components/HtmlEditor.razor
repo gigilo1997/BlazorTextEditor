@@ -1,11 +1,14 @@
 ﻿@inject IJSRuntime JSRuntime
 
-<div id="QuillEditor" @ref="@QuillElement">
+<div @ref="@QuillElement">
 </div>
 
 @code {
     private ElementReference QuillElement;
     private DotNetObjectReference<HtmlEditor>? DotNetRef;
+
+    [Inject]
+    public HttpClient Http { get; set; } = default!;
 
     [Parameter]
     public bool ShowToolbar { get; set; } = true;
@@ -23,6 +26,25 @@
         {
             Value = html;
             await ValueChanged.InvokeAsync(html);
+        }
+    }
+
+    [JSInvokable]
+    public async Task<string> UploadImage(string base64, string fileName)
+    {
+        byte[] imageBytes = Convert.FromBase64String(base64);
+        using var content = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(imageBytes);
+        content.Add(fileContent, "file", fileName);
+
+        var response = await Http.PostAsync("api/upload-image", content);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadAsStringAsync();
+        }
+        else
+        {
+            throw new Exception("Upload failed");
         }
     }
 

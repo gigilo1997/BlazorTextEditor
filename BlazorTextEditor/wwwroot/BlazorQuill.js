@@ -26,22 +26,19 @@
                                 input.onchange = async () => {
                                     const file = input.files[0];
                                     if (file) {
-                                        const formData = new FormData();
-                                        formData.append('file', file);
-
-                                        // Url should not be here
-                                        const response = await fetch('https://localhost:7219/api/upload-image', {
-                                            method: 'POST',
-                                            body: formData
-                                        });
-
-                                        if (response.ok) {
-                                            const imageUrl = await response.text(); // or JSON if you return { url: "..." }
-                                            const range = quill.getSelection();
-                                            quill.insertEmbed(range.index, 'image', imageUrl);
-                                        } else {
-                                            alert('Image upload failed');
-                                        }
+                                        const reader = new FileReader();
+                                        reader.onload = async () => {
+                                            const base64 = reader.result.split(',')[1];
+                                            const imageName = file.name;
+                                            try {
+                                                const imageUrl = await dotNetHelper.invokeMethodAsync('UploadImage', base64, imageName);
+                                                const range = quill.getSelection();
+                                                quill.insertEmbed(range.index, 'image', imageUrl);
+                                            } catch (err) {
+                                                alert('Upload failed');
+                                            }
+                                        };
+                                        reader.readAsDataURL(file);
                                     }
                                 };
                             }
