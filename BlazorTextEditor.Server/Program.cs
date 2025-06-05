@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Mvc;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
@@ -38,6 +40,18 @@ app.MapPost("/api/upload-image", async (HttpRequest request) =>
 
     // Return image URL
     return Results.Text($"https://localhost:7219/uploads/{fileName}");
+});
+
+app.MapDelete("/api/delete-image", ([FromQuery] string name) =>
+{
+    var path = Path.Combine("wwwroot/uploads", name);
+    if (File.Exists(path))
+    {
+        File.Delete(path);
+        return Results.Ok();
+    }
+
+    return Results.NotFound();
 });
 
 app.Run();

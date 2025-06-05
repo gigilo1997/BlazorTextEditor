@@ -36,7 +36,7 @@
                                         });
 
                                         if (response.ok) {
-                                            const imageUrl = await response.text(); // or JSON if you return { url: "..." }
+                                            const imageUrl = await response.text();
                                             const range = quill.getSelection();
                                             quill.insertEmbed(range.index, 'image', imageUrl);
                                         } else {
@@ -66,9 +66,33 @@
                 quill.root.innerHTML = initialContent;
             }
 
+            let previousHtml = initialContent || "";
+
             quill.on('text-change', function () {
-                const html = quill.root.innerHTML;
-                dotNetHelper.invokeMethodAsync('OnQuillTextChanged', html);
+                const currentHtml = quill.root.innerHTML;
+
+                const getImageUrls = (html) =>
+                    Array.from((new DOMParser()).parseFromString(html, 'text/html').images).map(img => img.src);
+
+                const previousImages = getImageUrls(previousHtml);
+                const currentImages = getImageUrls(currentHtml);
+
+                const removedImages = previousImages.filter(src => !currentImages.includes(src));
+
+                removedImages.forEach(async (src) => {
+                    try {
+                        const filename = src.split('/').pop();
+                        await fetch(`https://localhost:7219/api/delete-image?name=${encodeURIComponent(filename)}`, {
+                            method: 'DELETE'
+                        });
+                    } catch (err) {
+                        console.error('Failed to delete image:', err);
+                    }
+                });
+
+                dotNetHelper.invokeMethodAsync('OnQuillTextChanged', currentHtml);
+
+                previousHtml = currentHtml;
             });
         },
         getQuillHTML: function (quillElement) {
