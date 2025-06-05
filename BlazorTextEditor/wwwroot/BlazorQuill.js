@@ -1,50 +1,77 @@
 ﻿(function () {
-    window.QuillFunctions = {
-        createQuill: function (quillElement, toolbar, dotNetHelper, initialContent) {
-            Quill.register({
-                'modules/table-better': QuillTableBetter
-            }, true);
+    const uploadUrl = 'https://localhost:7219/api/upload-image';
+    const deleteUrl = 'https://localhost:7219/api/delete-image';
 
-            let toolbarOptions = [
+    function getImageUrls(html) {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        return Array.from(doc.images).map(img => img.src);
+    }
+
+    async function uploadImage(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch(uploadUrl, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error('Image upload failed');
+        }
+
+        return await response.text();
+    }
+
+    async function deleteImage(src) {
+        const filename = src.split('/').pop();
+        try {
+            await fetch(`${deleteUrl}?name=${encodeURIComponent(filename)}`, {
+                method: 'DELETE'
+            });
+        } catch (err) {
+            console.error('Failed to delete image:', err);
+        }
+    }
+
+    function handleImageUpload(quill) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.click();
+
+        input.onchange = async () => {
+            const file = input.files[0];
+            if (!file) return;
+
+            try {
+                const imageUrl = await uploadImage(file);
+                const range = quill.getSelection();
+                quill.insertEmbed(range.index, 'image', imageUrl);
+            } catch {
+                alert('Image upload failed');
+            }
+        };
+    }
+
+    window.QuillFunctions = {
+        createQuill: function (quillElement, showToolbar, dotNetHelper, initialContent) {
+            Quill.register({ 'modules/table-better': QuillTableBetter }, true);
+
+            const toolbarOptions = [
                 ['bold', 'italic', 'underline'],
                 ['link', 'image'],
                 ['table-better'],
                 [{ 'header': 1 }, { 'header': 2 }, { 'header': 3 }],
             ];
-            let options = {
+
+            const quill = new Quill(quillElement, {
                 debug: 'debug',
                 modules: {
-                    toolbar: toolbar ? {
+                    toolbar: showToolbar ? {
                         container: toolbarOptions,
                         handlers: {
-                            image: function () {
-                                const input = document.createElement('input');
-                                input.setAttribute('type', 'file');
-                                input.setAttribute('accept', 'image/*');
-                                input.click();
-
-                                input.onchange = async () => {
-                                    const file = input.files[0];
-                                    if (file) {
-                                        const formData = new FormData();
-                                        formData.append('file', file);
-
-                                        // Url should not be here
-                                        const response = await fetch('https://localhost:7219/api/upload-image', {
-                                            method: 'POST',
-                                            body: formData
-                                        });
-
-                                        if (response.ok) {
-                                            const imageUrl = await response.text();
-                                            const range = quill.getSelection();
-                                            quill.insertEmbed(range.index, 'image', imageUrl);
-                                        } else {
-                                            alert('Image upload failed');
-                                        }
-                                    }
-                                };
-                            }
+                            image: () => handleImageUpload(quill)
                         }
                     } : false,
                     'table-better': {
@@ -57,9 +84,8 @@
                 keyboard: {
                     bindings: QuillTableBetter.keyboardBindings
                 }
-            }
-            
-            const quill = new Quill(quillElement, options);
+            });
+
             quillElement.__quill = quill;
 
             if (initialContent) {
@@ -71,32 +97,19 @@
             quill.on('text-change', function () {
                 const currentHtml = quill.root.innerHTML;
 
-                const getImageUrls = (html) =>
-                    Array.from((new DOMParser()).parseFromString(html, 'text/html').images).map(img => img.src);
-
                 const previousImages = getImageUrls(previousHtml);
                 const currentImages = getImageUrls(currentHtml);
 
                 const removedImages = previousImages.filter(src => !currentImages.includes(src));
-
-                removedImages.forEach(async (src) => {
-                    try {
-                        const filename = src.split('/').pop();
-                        await fetch(`https://localhost:7219/api/delete-image?name=${encodeURIComponent(filename)}`, {
-                            method: 'DELETE'
-                        });
-                    } catch (err) {
-                        console.error('Failed to delete image:', err);
-                    }
-                });
+                removedImages.forEach(deleteImage);
 
                 dotNetHelper.invokeMethodAsync('OnQuillTextChanged', currentHtml);
-
                 previousHtml = currentHtml;
             });
         },
+
         getQuillHTML: function (quillElement) {
             return quillElement.__quill.root.innerHTML;
-        },
-    }
+        }
+    };
 })();
